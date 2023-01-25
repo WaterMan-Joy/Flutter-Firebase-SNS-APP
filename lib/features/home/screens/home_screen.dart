@@ -7,9 +7,27 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(userProvider)!;
+    final user = ref.watch(userProvider);
     return Scaffold(
-      body: Center(child: Text('${user.name}')),
-    );
+        appBar: AppBar(
+          title: Text(user?.name ?? ''),
+          actions: [
+            FadeInImage.assetNetwork(
+              placeholder: 'assets/images/google_2.jpeg',
+              image: user?.profilePic ?? '',
+              width: 40,
+              fit: BoxFit.contain,
+            ),
+          ],
+        ),
+        body: Center(
+          child: Column(
+            children: [
+              FadeInImage.assetNetwork(
+                  placeholder: 'assets/images/google_2.jpeg',
+                  image: user?.banner ?? ''),
+            ],
+          ),
+        ));
   }
 }
