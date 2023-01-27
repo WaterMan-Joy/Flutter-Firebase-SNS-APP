@@ -13,6 +13,15 @@ final userCommunitiesProvider = StreamProvider((ref) {
   return communityProvider.getUserCommunities();
 });
 
+// StreamProviderFamily 는 다른 파라미터를 받을 때 사용한다
+final getCommunityByNameProvider = StreamProvider.family((ref, String name) {
+  return ref
+      .watch(communityControllerProvider.notifier)
+      .getCommunityByName(name);
+  // final communityProvider = ref.watch(communityControllerProvider.notifier);
+  // return communityProvider.getCommunityByName(name);
+});
+
 // screen view 에서 isLoading 으로 왓치 한다
 final communityControllerProvider =
     StateNotifierProvider<CommunityController, bool>((ref) {
@@ -61,5 +70,9 @@ class CommunityController extends StateNotifier<bool> {
   Stream<List<Community>> getUserCommunities() {
     final uid = _ref.read(userProvider)?.uid ?? '';
     return _communityRepository.getUserCommunities(uid);
+  }
+
+  Stream<Community> getCommunityByName(String name) {
+    return _communityRepository.getCommunityByName(name);
   }
 }
