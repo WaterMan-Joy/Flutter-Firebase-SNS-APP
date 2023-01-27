@@ -44,10 +44,7 @@ class HomeScreen extends ConsumerWidget {
       ),
       body: Center(
         child: Column(
-          children: [
-            FadeInImage.assetNetwork(
-                placeholder: 'assets/images/google_2.jpeg', image: user.banner),
-          ],
+          children: [],
         ),
       ),
       drawer: CommunityListDrawer(),

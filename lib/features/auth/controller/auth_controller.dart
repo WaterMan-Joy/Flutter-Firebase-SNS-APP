@@ -46,6 +46,7 @@ class AuthController extends StateNotifier<bool> {
 
   Stream<User?> get authStateChange => _authRepository.authStateChange;
 
+  // BuildContext 를 받는 이유는 실패 시 스낵바를 사용하기 때문
   void signInWithGoogle(BuildContext context) async {
     // 로그인 시도 했을때 로딩 바 실행
     state = true;
