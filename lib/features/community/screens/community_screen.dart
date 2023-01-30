@@ -36,7 +36,7 @@ class CommunityScreen extends ConsumerWidget {
                       children: [
                         Positioned.fill(
                           child: Image.network(
-                            community.bannder,
+                            community.banner,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -51,7 +51,7 @@ class CommunityScreen extends ConsumerWidget {
                           Align(
                             alignment: Alignment.centerLeft,
                             child: CircleAvatar(
-                              backgroundImage: NetworkImage(community.avater),
+                              backgroundImage: NetworkImage(community.avatar),
                               radius: 35,
                             ),
                           ),

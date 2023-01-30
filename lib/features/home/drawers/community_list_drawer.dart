@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_firebase_sns_app/core/common/error.dart';
 import 'package:flutter_firebase_sns_app/core/common/loader.dart';
+import 'package:flutter_firebase_sns_app/features/auth/controller/auth_controller.dart';
 import 'package:flutter_firebase_sns_app/features/community/controller/community_controller.dart';
 import 'package:flutter_firebase_sns_app/models/community_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,7 +37,7 @@ class CommunityListDrawer extends ConsumerWidget {
                         final community = data[index];
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundImage: NetworkImage(community.avater),
+                            backgroundImage: NetworkImage(community.avatar),
                           ),
                           title: Text('${community.name}의 모임'),
                           trailing: Text('멤버 ${community.members.length}명'),

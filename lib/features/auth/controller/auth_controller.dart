@@ -60,6 +60,10 @@ class AuthController extends StateNotifier<bool> {
             _ref.read(userProvider.notifier).update((state) => userModel));
   }
 
+  void logOut() {
+    _authRepository.logOut();
+  }
+
   // repository 와 controller 를 분리
   Stream<UserModel> getUserData(String uid) {
     return _authRepository.getUserData(uid);

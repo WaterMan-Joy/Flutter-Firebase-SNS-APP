@@ -7,15 +7,15 @@ import 'package:flutter/foundation.dart';
 class Community {
   final String id;
   final String name;
-  final String bannder;
-  final String avater;
+  final String banner;
+  final String avatar;
   final List<String> members;
   final List<String> mods;
   Community({
     required this.id,
     required this.name,
-    required this.bannder,
-    required this.avater,
+    required this.banner,
+    required this.avatar,
     required this.members,
     required this.mods,
   });
@@ -23,16 +23,16 @@ class Community {
   Community copyWith({
     String? id,
     String? name,
-    String? bannder,
-    String? avater,
+    String? banner,
+    String? avatar,
     List<String>? members,
     List<String>? mods,
   }) {
     return Community(
       id: id ?? this.id,
       name: name ?? this.name,
-      bannder: bannder ?? this.bannder,
-      avater: avater ?? this.avater,
+      banner: banner ?? this.banner,
+      avatar: avatar ?? this.avatar,
       members: members ?? this.members,
       mods: mods ?? this.mods,
     );
@@ -42,8 +42,8 @@ class Community {
     return <String, dynamic>{
       'id': id,
       'name': name,
-      'bannder': bannder,
-      'avater': avater,
+      'banner': banner,
+      'avatar': avatar,
       'members': members,
       'mods': mods,
     };
@@ -53,8 +53,8 @@ class Community {
     return Community(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
-      bannder: map['bannder'] ?? '',
-      avater: map['avater'] ?? '',
+      banner: map['banner'] ?? '',
+      avatar: map['avatar'] ?? '',
       members: List<String>.from(map['members']),
       mods: List<String>.from(map['mods']),
     );
@@ -67,7 +67,7 @@ class Community {
 
   @override
   String toString() {
-    return 'Community(id: $id, name: $name, bannder: $bannder, avater: $avater, members: $members, mods: $mods)';
+    return 'Community(id: $id, name: $name, bannder: $banner, avater: $avatar, members: $members, mods: $mods)';
   }
 
   @override
@@ -76,8 +76,8 @@ class Community {
 
     return other.id == id &&
         other.name == name &&
-        other.bannder == bannder &&
-        other.avater == avater &&
+        other.banner == banner &&
+        other.avatar == avatar &&
         listEquals(other.members, members) &&
         listEquals(other.mods, mods);
   }
@@ -86,8 +86,8 @@ class Community {
   int get hashCode {
     return id.hashCode ^
         name.hashCode ^
-        bannder.hashCode ^
-        avater.hashCode ^
+        banner.hashCode ^
+        avatar.hashCode ^
         members.hashCode ^
         mods.hashCode;
   }

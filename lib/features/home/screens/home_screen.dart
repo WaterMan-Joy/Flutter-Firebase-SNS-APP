@@ -15,6 +15,11 @@ class HomeScreen extends ConsumerWidget {
     Routemaster.of(context).push('/create-community');
   }
 
+  // TODO: log out
+  void logOut(WidgetRef ref) {
+    ref.read(authControllerProvider.notifier).logOut();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // user data
@@ -44,7 +49,12 @@ class HomeScreen extends ConsumerWidget {
       ),
       body: Center(
         child: Column(
-          children: [],
+          children: [
+            ElevatedButton(
+              onPressed: () => logOut(ref),
+              child: Text('로그아웃'),
+            ),
+          ],
         ),
       ),
       drawer: CommunityListDrawer(),
