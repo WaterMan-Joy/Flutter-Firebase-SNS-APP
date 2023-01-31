@@ -1,7 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:convert';
-
-import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
 class Community {
@@ -39,7 +35,7 @@ class Community {
   }
 
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
+    return {
       'id': id,
       'name': name,
       'banner': banner,
@@ -60,21 +56,17 @@ class Community {
     );
   }
 
-  String toJson() => json.encode(toMap());
-
-  factory Community.fromJson(String source) =>
-      Community.fromMap(json.decode(source) as Map<String, dynamic>);
-
   @override
   String toString() {
-    return 'Community(id: $id, name: $name, bannder: $banner, avater: $avatar, members: $members, mods: $mods)';
+    return 'Community(id: $id, name: $name, banner: $banner, avatar: $avatar, members: $members, mods: $mods)';
   }
 
   @override
-  bool operator ==(covariant Community other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other.id == id &&
+    return other is Community &&
+        other.id == id &&
         other.name == name &&
         other.banner == banner &&
         other.avatar == avatar &&

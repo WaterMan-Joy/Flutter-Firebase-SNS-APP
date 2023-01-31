@@ -2,6 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_firebase_sns_app/core/constants/constants.dart';
 import 'package:flutter_firebase_sns_app/core/constants/firebase_constants.dart';
 import 'package:flutter_firebase_sns_app/core/failure.dart';
@@ -12,67 +13,112 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-final authRepositoryProvider = Provider((ref) {
-  return AuthRepository(
-    firebaseFirestore: ref.read(firebaseFirestoreProvider),
-    firebaseAuth: ref.read(firebaseAuthProvider),
+final authRepositoryProvider = Provider(
+  (ref) => AuthRepository(
+    firestore: ref.read(firestoreProvider),
+    auth: ref.read(authProvider),
     googleSignIn: ref.read(googleSignInProvider),
-  );
-});
+  ),
+);
 
 class AuthRepository {
-  final FirebaseFirestore _firebaseFirestore;
-  final FirebaseAuth _firebaseAuth;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;
+
   AuthRepository({
-    required FirebaseFirestore firebaseFirestore,
-    required FirebaseAuth firebaseAuth,
+    required FirebaseFirestore firestore,
+    required FirebaseAuth auth,
     required GoogleSignIn googleSignIn,
-  })  : _firebaseFirestore = firebaseFirestore,
-        _firebaseAuth = firebaseAuth,
+  })  : _auth = auth,
+        _firestore = firestore,
         _googleSignIn = googleSignIn;
 
   CollectionReference get _users =>
-      _firebaseFirestore.collection(FirebaseConstants.usersCollection);
+      _firestore.collection(FirebaseConstants.usersCollection);
 
-  // firebase user
-  Stream<User?> get authStateChange => _firebaseAuth.authStateChanges();
+  Stream<User?> get authStateChange => _auth.authStateChanges();
 
-  FutureEither<UserModel> signInWithGoogle() async {
+  FutureEither<UserModel> signInWithGoogle(bool isFromLogin) async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      final googleAuth = await googleUser?.authentication;
-      final credential = GoogleAuthProvider.credential(
-        idToken: googleAuth?.idToken,
-        accessToken: googleAuth?.accessToken,
-      );
-      UserCredential userCredential =
-          await _firebaseAuth.signInWithCredential(credential);
-      print('&&& login user email ${userCredential.user?.email}');
+      UserCredential userCredential;
+      if (kIsWeb) {
+        GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        googleProvider
+            .addScope('https://www.googleapis.com/auth/contacts.readonly');
+        userCredential = await _auth.signInWithPopup(googleProvider);
+      } else {
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+        final googleAuth = await googleUser?.authentication;
+
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth?.accessToken,
+          idToken: googleAuth?.idToken,
+        );
+
+        if (isFromLogin) {
+          userCredential = await _auth.signInWithCredential(credential);
+        } else {
+          userCredential =
+              await _auth.currentUser!.linkWithCredential(credential);
+        }
+      }
 
       UserModel userModel;
 
       if (userCredential.additionalUserInfo!.isNewUser) {
-        print('&&& 새로운 유저');
         userModel = UserModel(
-          name: userCredential.user!.displayName ?? '',
-          profilePic: userCredential.user?.photoURL ?? Constants.avatarDefault,
+          name: userCredential.user!.displayName ?? 'No Name',
+          profilePic: userCredential.user!.photoURL ?? Constants.avatarDefault,
           banner: Constants.bannerDefault,
           uid: userCredential.user!.uid,
           isAuthenticated: true,
           karma: 0,
-          awards: [],
+          awards: [
+            'awesomeAns',
+            'gold',
+            'platinum',
+            'helpful',
+            'plusone',
+            'rocket',
+            'thankyou',
+            'til',
+          ],
         );
         await _users.doc(userCredential.user!.uid).set(userModel.toMap());
       } else {
-        print('&&& 기존 유저');
         userModel = await getUserData(userCredential.user!.uid).first;
       }
       return right(userModel);
     } on FirebaseException catch (e) {
       throw e.message!;
     } catch (e) {
-      print(e);
+      return left(Failure(e.toString()));
+    }
+  }
+
+  FutureEither<UserModel> signInAsGuest() async {
+    try {
+      var userCredential = await _auth.signInAnonymously();
+      print('&&&&& $userCredential');
+
+      UserModel userModel = UserModel(
+        name: 'Guest',
+        profilePic: Constants.avatarDefault,
+        banner: Constants.bannerDefault,
+        uid: userCredential.user!.uid,
+        isAuthenticated: false,
+        karma: 0,
+        awards: [],
+      );
+
+      await _users.doc(userCredential.user!.uid).set(userModel.toMap());
+
+      return right(userModel);
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
       return left(Failure(e.toString()));
     }
   }
@@ -84,6 +130,6 @@ class AuthRepository {
 
   void logOut() async {
     await _googleSignIn.signOut();
-    await _firebaseAuth.signOut();
+    await _auth.signOut();
   }
 }

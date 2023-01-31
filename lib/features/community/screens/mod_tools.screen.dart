@@ -5,41 +5,38 @@ import 'package:flutter_firebase_sns_app/features/auth/controller/auth_controlle
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 
-class ModToolsScreen extends ConsumerWidget {
+class ModToolsScreen extends StatelessWidget {
   final String name;
-  const ModToolsScreen({super.key, required this.name});
+  const ModToolsScreen({
+    Key? key,
+    required this.name,
+  }) : super(key: key);
 
-  void navigateToEditScreen(BuildContext context) {
+  void navigateToModTools(BuildContext context) {
     Routemaster.of(context).push('/edit-community/$name');
   }
 
+  void navigateToAddMods(BuildContext context) {
+    Routemaster.of(context).push('/add-mods/$name');
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('설정'),
+        title: const Text('Mod Tools'),
       ),
       body: Column(
         children: [
           ListTile(
-            leading: Icon(Icons.account_box),
-            title: Text('아바타'),
-            onTap: () {},
+            leading: const Icon(Icons.add_moderator),
+            title: const Text('Add Moderators'),
+            onTap: () => navigateToAddMods(context),
           ),
           ListTile(
-            leading: Icon(Icons.edit),
-            title: Text('수정'),
-            onTap: () => navigateToEditScreen(context),
-          ),
-          ListTile(
-            leading: Icon(Icons.add_moderator),
-            title: Text('멤버보기'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: Icon(Icons.settings),
-            title: Text('설정'),
-            onTap: () {},
+            leading: const Icon(Icons.edit),
+            title: const Text('Edit Community'),
+            onTap: () => navigateToModTools(context),
           ),
         ],
       ),

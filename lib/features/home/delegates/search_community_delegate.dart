@@ -16,7 +16,7 @@ class SearchCommunityDelegate extends SearchDelegate {
         onPressed: () {
           query = '';
         },
-        icon: Icon(Icons.close),
+        icon: const Icon(Icons.close),
       ),
     ];
   }
@@ -28,29 +28,33 @@ class SearchCommunityDelegate extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-    return SizedBox();
+    return const SizedBox();
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
     return ref.watch(searchCommunityProvider(query)).when(
-        data: (data) => ListView.builder(
-            itemCount: data.length,
-            itemBuilder: (context, index) {
-              final community = data[index];
+          data: (communites) => ListView.builder(
+            itemCount: communites.length,
+            itemBuilder: (BuildContext context, int index) {
+              final community = communites[index];
               return ListTile(
                 leading: CircleAvatar(
                   backgroundImage: NetworkImage(community.avatar),
                 ),
-                title: Text(community.name),
+                title: Text('r/${community.name}'),
                 onTap: () => navigateToCommunity(context, community.name),
               );
-            }),
-        error: (error, stackTrace) => ErrorText(error: error.toString()),
-        loading: () => Loader());
+            },
+          ),
+          error: (error, stackTrace) => ErrorText(
+            error: error.toString(),
+          ),
+          loading: () => const Loader(),
+        );
   }
 
   void navigateToCommunity(BuildContext context, String communityName) {
-    Routemaster.of(context).push('/r/${communityName}');
+    Routemaster.of(context).push('/r/$communityName');
   }
 }

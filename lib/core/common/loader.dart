@@ -3,11 +3,11 @@ import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 
 class Loader extends StatelessWidget {
-  const Loader({super.key});
+  const Loader({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: CircularProgressIndicator(),
     );
   }

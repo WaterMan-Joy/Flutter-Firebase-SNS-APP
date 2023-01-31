@@ -9,8 +9,21 @@ import 'package:routemaster/routemaster.dart';
 
 import '../../../core/common/sign_in_button.dart';
 
-class CommunityListDrawer extends ConsumerWidget {
+//
+class CommunityListDrawer extends ConsumerStatefulWidget {
   const CommunityListDrawer({super.key});
+
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _CommunityListDrawerState();
+}
+
+class _CommunityListDrawerState extends ConsumerState<CommunityListDrawer> {
+  @override
+  void initState() {
+    super.initState();
+    print('&&&&&ititState');
+  }
 
   void navigateToCreateCommunity(BuildContext context) {
     Routemaster.of(context).push('/create-community');
@@ -20,23 +33,16 @@ class CommunityListDrawer extends ConsumerWidget {
     Routemaster.of(context).push('/r/${community.name}');
   }
 
-  void logOut(WidgetRef ref) {
-    ref.read(authControllerProvider.notifier).logout();
-  }
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = ref.watch(userProvider)!;
+    print('$user');
     final isGuest = !user.isAuthenticated;
 
     return Drawer(
       child: SafeArea(
         child: Column(
           children: [
-            ElevatedButton(
-              onPressed: () => logOut(ref),
-              child: Text('로그아웃'),
-            ),
             isGuest
                 ? const SignInButton()
                 : ListTile(

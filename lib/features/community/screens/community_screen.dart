@@ -7,26 +7,34 @@ import 'package:flutter_firebase_sns_app/features/community/controller/community
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 
+import '../../../core/common/post_card.dart';
+import '../../../models/community_model.dart';
+
 class CommunityScreen extends ConsumerWidget {
   final String name;
-  const CommunityScreen({
-    super.key,
-    required this.name,
-  });
+  const CommunityScreen({super.key, required this.name});
 
-  void navigateToModToolsScreen(BuildContext context) {
+  // http://localhost:4000/r/flutter
+
+  void navigateToModTools(BuildContext context) {
     Routemaster.of(context).push('/mod-tools/$name');
+  }
+
+  void joinCommunity(WidgetRef ref, Community community, BuildContext context) {
+    ref
+        .read(communityControllerProvider.notifier)
+        .joinCommunity(community, context);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 멤버 탈퇴 혹은 멤버 가입 용도 왓치
     final user = ref.watch(userProvider)!;
+    final isGuest = !user.isAuthenticated;
+
     return Scaffold(
       body: ref.watch(getCommunityByNameProvider(name)).when(
-          data: (community) {
-            return NestedScrollView(
-              headerSliverBuilder: ((context, innerBoxIsScrolled) {
+            data: (community) => NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
                 return [
                   SliverAppBar(
                     expandedHeight: 150,
@@ -44,72 +52,93 @@ class CommunityScreen extends ConsumerWidget {
                     ),
                   ),
                   SliverPadding(
-                    padding: EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(16),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate(
                         [
                           Align(
-                            alignment: Alignment.centerLeft,
+                            alignment: Alignment.topLeft,
                             child: CircleAvatar(
                               backgroundImage: NetworkImage(community.avatar),
                               radius: 35,
                             ),
                           ),
-                          SizedBox(
-                            height: 10,
-                          ),
+                          const SizedBox(height: 5),
                           Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '${community.name} 의 모임',
-                                style: TextStyle(fontSize: 30),
+                                'r/${community.name}',
+                                style: const TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                              SizedBox(
-                                width: 10,
-                              ),
-                              Spacer(),
-                              community.mods.contains(user.uid)
-                                  ? ElevatedButton(
-                                      onPressed: () =>
-                                          navigateToModToolsScreen(context),
-                                      child: Text('설정'),
-                                      style: ElevatedButton.styleFrom(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
+                              if (!isGuest)
+                                community.mods.contains(user.uid)
+                                    ? OutlinedButton(
+                                        onPressed: () {
+                                          navigateToModTools(context);
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 25),
                                         ),
-                                      ),
-                                    )
-                                  : ElevatedButton(
-                                      onPressed: () {},
-                                      child: Text(
-                                          community.mods.contains(user.uid)
-                                              ? '가입완료'
-                                              : '가입하기'),
-                                      style: ElevatedButton.styleFrom(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
+                                        child: const Text('Mod Tools'),
+                                      )
+                                    : OutlinedButton(
+                                        onPressed: () => joinCommunity(
+                                            ref, community, context),
+                                        style: ElevatedButton.styleFrom(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 25),
                                         ),
+                                        child: Text(
+                                            community.members.contains(user.uid)
+                                                ? 'Joined'
+                                                : 'Join'),
                                       ),
-                                    ),
                             ],
                           ),
-                          Text(
-                            '${community.members.length}명',
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Text(
+                              '${community.members.length} members',
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ),
                 ];
-              }),
-              body: Center(),
-            );
-          },
-          error: (error, StackTrace) => ErrorText(error: error.toString()),
-          loading: () => Loader()),
+              },
+              body: ref.watch(getCommunityPostsProvider(name)).when(
+                    data: (data) {
+                      return ListView.builder(
+                        itemCount: data.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final post = data[index];
+                          return PostCard(post: post);
+                        },
+                      );
+                    },
+                    error: (error, stackTrace) {
+                      return ErrorText(error: error.toString());
+                    },
+                    loading: () => const Loader(),
+                  ),
+            ),
+            error: (error, stackTrace) => ErrorText(error: error.toString()),
+            loading: () => const Loader(),
+          ),
     );
   }
 }

@@ -8,17 +8,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/user_model.dart';
 
-final userProvider = StateProvider<UserModel?>((ref) {
-  return null;
-});
+final userProvider = StateProvider<UserModel?>((ref) => null);
 
 final authControllerProvider = StateNotifierProvider<AuthController, bool>(
-  (ref) {
-    return AuthController(
-      authRepository: ref.watch(authRepositoryProvider),
-      ref: ref,
-    );
-  },
+  (ref) => AuthController(
+    authRepository: ref.watch(authRepositoryProvider),
+    ref: ref,
+  ),
 );
 
 final authStateChangeProvider = StreamProvider((ref) {
@@ -31,36 +27,43 @@ final getUserDataProvider = StreamProvider.family((ref, String uid) {
   return authController.getUserData(uid);
 });
 
-// bool type 스테이트 생성
 class AuthController extends StateNotifier<bool> {
   final AuthRepository _authRepository;
   final Ref _ref;
-  AuthController({
-    required AuthRepository authRepository,
-    required Ref ref,
-  })  : _authRepository = authRepository,
+  AuthController({required AuthRepository authRepository, required Ref ref})
+      : _authRepository = authRepository,
         _ref = ref,
-        super(false);
+        super(false); // loading
 
   Stream<User?> get authStateChange => _authRepository.authStateChange;
 
-  // BuildContext 를 받는 이유는 실패 시 스낵바를 사용하기 때문
-  void signInWithGoogle(BuildContext context) async {
+  void signInWithGoogle(BuildContext context, bool isFromLogin) async {
     state = true;
-    final user = await _authRepository.signInWithGoogle();
+    final user = await _authRepository.signInWithGoogle(isFromLogin);
     state = false;
     user.fold(
-        (l) => showSnackBar(context, l.message),
-        (userModel) =>
-            _ref.read(userProvider.notifier).update((state) => userModel));
+      (l) => showSnackBar(context, l.message),
+      (userModel) =>
+          _ref.read(userProvider.notifier).update((state) => userModel),
+    );
   }
 
-  // repository 와 controller 를 분리
+  void signInAsGuest(BuildContext context) async {
+    state = true;
+    final user = await _authRepository.signInAsGuest();
+    state = false;
+    user.fold(
+      (l) => showSnackBar(context, l.message),
+      (userModel) =>
+          _ref.read(userProvider.notifier).update((state) => userModel),
+    );
+  }
+
   Stream<UserModel> getUserData(String uid) {
     return _authRepository.getUserData(uid);
   }
 
-  void logout() {
+  void logout() async {
     _authRepository.logOut();
   }
 }

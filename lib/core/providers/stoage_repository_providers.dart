@@ -23,20 +23,17 @@ class StorageRepository {
     required String path,
     required String id,
     required File? file,
-    // required Uint8List? webFile,
+    required Uint8List? webFile,
   }) async {
     try {
       final ref = _firebaseStorage.ref().child(path).child(id);
-      UploadTask uploadTask = ref.putFile(file!);
-      // if (kIsWeb) {
-      //   uploadTask = ref.putData(webFile!);
-      //   print('&&& $uploadTask');
-      // }
+      UploadTask uploadTask;
 
-      // else {
-      //   uploadTask = ref.putFile(file!);
-      //   print('&&& $uploadTask');
-      // }
+      if (kIsWeb) {
+        uploadTask = ref.putData(webFile!);
+      } else {
+        uploadTask = ref.putFile(file!);
+      }
 
       final snapshot = await uploadTask;
 

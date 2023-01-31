@@ -23,6 +23,7 @@ class ProfileDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider)!;
+
     return Drawer(
       child: SafeArea(
         child: Column(
@@ -33,7 +34,7 @@ class ProfileDrawer extends ConsumerWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              '이름 : ${user.name}',
+              'u/${user.name}',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
@@ -42,12 +43,12 @@ class ProfileDrawer extends ConsumerWidget {
             const SizedBox(height: 10),
             const Divider(),
             ListTile(
-              title: const Text('프로필'),
+              title: const Text('My Profile'),
               leading: const Icon(Icons.person),
               onTap: () => navigateToUserProfile(context, user.uid),
             ),
             ListTile(
-              title: const Text('로그아웃'),
+              title: const Text('Log Out'),
               leading: Icon(
                 Icons.logout,
                 color: Pallete.redColor,

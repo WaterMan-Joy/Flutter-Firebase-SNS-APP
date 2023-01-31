@@ -20,7 +20,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(
-    ProviderScope(
+    const ProviderScope(
       child: MyApp(),
     ),
   );
@@ -49,21 +49,23 @@ class _MyAppState extends ConsumerState<MyApp> {
     return ref.watch(authStateChangeProvider).when(
           data: (data) => MaterialApp.router(
             debugShowCheckedModeBanner: false,
-            title: 'Flutter SNS APP',
-            theme: Pallete.lightModeAppTheme,
-            routerDelegate: RoutemasterDelegate(routesBuilder: (context) {
-              if (data != null) {
-                getData(ref, data);
-                if (userModel != null) {
-                  return loggedInRoute;
+            title: 'Reddit Tutorial',
+            theme: ref.watch(themeNotifierProvider),
+            routerDelegate: RoutemasterDelegate(
+              routesBuilder: (context) {
+                if (data != null) {
+                  getData(ref, data);
+                  if (userModel != null) {
+                    return loggedInRoute;
+                  }
                 }
-              }
-              return loggedOutRoute;
-            }),
-            routeInformationParser: RoutemasterParser(),
+                return loggedOutRoute;
+              },
+            ),
+            routeInformationParser: const RoutemasterParser(),
           ),
           error: (error, stackTrace) => ErrorText(error: error.toString()),
-          loading: () => Loader(),
+          loading: () => const Loader(),
         );
   }
 }

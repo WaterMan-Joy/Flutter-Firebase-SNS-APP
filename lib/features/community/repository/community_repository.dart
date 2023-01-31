@@ -9,15 +9,16 @@ import 'package:flutter_firebase_sns_app/models/community_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
+import '../../../models/post_model.dart';
+
 final communityRepositoryProvider = Provider((ref) {
-  return CommunityRepository(
-      firebaseFirestore: ref.watch(firebaseFirestoreProvider));
+  return CommunityRepository(firestore: ref.watch(firestoreProvider));
 });
 
 class CommunityRepository {
-  final FirebaseFirestore _firebaseFirestore;
-  CommunityRepository({required FirebaseFirestore firebaseFirestore})
-      : _firebaseFirestore = firebaseFirestore;
+  final FirebaseFirestore _firestore;
+  CommunityRepository({required FirebaseFirestore firestore})
+      : _firestore = firestore;
 
   FutureVoid createCommunity(Community community) async {
     try {
@@ -27,6 +28,30 @@ class CommunityRepository {
       }
 
       return right(_communities.doc(community.name).set(community.toMap()));
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      return left(Failure(e.toString()));
+    }
+  }
+
+  FutureVoid joinCommunity(String communityName, String userId) async {
+    try {
+      return right(_communities.doc(communityName).update({
+        'members': FieldValue.arrayUnion([userId]),
+      }));
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      return left(Failure(e.toString()));
+    }
+  }
+
+  FutureVoid leaveCommunity(String communityName, String userId) async {
+    try {
+      return right(_communities.doc(communityName).update({
+        'members': FieldValue.arrayRemove([userId]),
+      }));
     } on FirebaseException catch (e) {
       throw e.message!;
     } catch (e) {
@@ -85,6 +110,36 @@ class CommunityRepository {
     });
   }
 
+  FutureVoid addMods(String communityName, List<String> uids) async {
+    try {
+      return right(_communities.doc(communityName).update({
+        'mods': uids,
+      }));
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      return left(Failure(e.toString()));
+    }
+  }
+
+  Stream<List<Post>> getCommunityPosts(String name) {
+    return _posts
+        .where('communityName', isEqualTo: name)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map(
+          (event) => event.docs
+              .map(
+                (e) => Post.fromMap(
+                  e.data() as Map<String, dynamic>,
+                ),
+              )
+              .toList(),
+        );
+  }
+
+  CollectionReference get _posts =>
+      _firestore.collection(FirebaseConstants.postsCollection);
   CollectionReference get _communities =>
-      _firebaseFirestore.collection(FirebaseConstants.communitiesCollection);
+      _firestore.collection(FirebaseConstants.communitiesCollection);
 }
