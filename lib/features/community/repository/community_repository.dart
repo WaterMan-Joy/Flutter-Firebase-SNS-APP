@@ -9,55 +9,24 @@ import 'package:flutter_firebase_sns_app/models/community_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 
-// 컨트롤러에서 communityControllerProvier 에서 커뮤니티레파지토리프로바이더를 왓치 한다
 final communityRepositoryProvider = Provider((ref) {
-  // 커뮤니티레파지토리는 파이어베이스파이어스토어를 왓치한다
   return CommunityRepository(
       firebaseFirestore: ref.watch(firebaseFirestoreProvider));
 });
 
 class CommunityRepository {
   final FirebaseFirestore _firebaseFirestore;
-  CommunityRepository({
-    required firebaseFirestore,
-  }) : _firebaseFirestore = firebaseFirestore;
+  CommunityRepository({required FirebaseFirestore firebaseFirestore})
+      : _firebaseFirestore = firebaseFirestore;
 
   FutureVoid createCommunity(Community community) async {
     try {
-      // Why var?
-      var communityDoc = await _communites.doc(community.name).get();
+      var communityDoc = await _communities.doc(community.name).get();
       if (communityDoc.exists) {
-        throw '커뮤니티 존재함';
+        throw 'Community with the same name already exists!';
       }
-      return right(_communites.doc(community.name).set(community.toMap()));
-    } on FirebaseException catch (e) {
-      throw e.message!;
-    } catch (e) {
-      throw left(Failure(e.toString()));
-    }
-  }
 
-  // 커뮤니티 리스트
-  Stream<List<Community>> getUserCommunities(String uid) {
-    return _communites
-        .where('members', arrayContains: uid)
-        .snapshots()
-        .map((event) {
-      // List<Community> 타입으로 리턴해야 하기 때문에 먼저 빈 배열을 만든다. 추 후에 add
-      List<Community> communities = [];
-      // map 으로 event.docs List 를 doc 에다 넣고 doc 데이타를 formMap으로 감싸아준다
-      for (var doc in event.docs) {
-        // formMap 으로 감싸서 빈 배열에 add 한다
-        communities.add(Community.fromMap(doc.data() as Map<String, dynamic>));
-      }
-      // List<Community> 타입으로 만들어 리턴한다
-      return communities;
-    });
-  }
-
-  FutureVoid editCommunity(Community community) async {
-    try {
-      return right(_communites.doc(community.name).update(community.toMap()));
+      return right(_communities.doc(community.name).set(community.toMap()));
     } on FirebaseException catch (e) {
       throw e.message!;
     } catch (e) {
@@ -65,11 +34,57 @@ class CommunityRepository {
     }
   }
 
+  Stream<List<Community>> getUserCommunities(String uid) {
+    return _communities
+        .where('members', arrayContains: uid)
+        .snapshots()
+        .map((event) {
+      List<Community> communities = [];
+      for (var doc in event.docs) {
+        communities.add(Community.fromMap(doc.data() as Map<String, dynamic>));
+      }
+      return communities;
+    });
+  }
+
   Stream<Community> getCommunityByName(String name) {
-    return _communites.doc(name).snapshots().map(
+    return _communities.doc(name).snapshots().map(
         (event) => Community.fromMap(event.data() as Map<String, dynamic>));
   }
 
-  CollectionReference get _communites =>
+  FutureVoid editCommunity(Community community) async {
+    try {
+      return right(_communities.doc(community.name).update(community.toMap()));
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+      return left(Failure(e.toString()));
+    }
+  }
+
+  Stream<List<Community>> searchCommunity(String query) {
+    return _communities
+        .where(
+          'name',
+          isGreaterThanOrEqualTo: query.isEmpty ? 0 : query,
+          isLessThan: query.isEmpty
+              ? null
+              : query.substring(0, query.length - 1) +
+                  String.fromCharCode(
+                    query.codeUnitAt(query.length - 1) + 1,
+                  ),
+        )
+        .snapshots()
+        .map((event) {
+      List<Community> communities = [];
+      for (var community in event.docs) {
+        communities
+            .add(Community.fromMap(community.data() as Map<String, dynamic>));
+      }
+      return communities;
+    });
+  }
+
+  CollectionReference get _communities =>
       _firebaseFirestore.collection(FirebaseConstants.communitiesCollection);
 }

@@ -7,6 +7,8 @@ import 'package:flutter_firebase_sns_app/models/community_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 
+import '../../../core/common/sign_in_button.dart';
+
 class CommunityListDrawer extends ConsumerWidget {
   const CommunityListDrawer({super.key});
 
@@ -18,38 +20,54 @@ class CommunityListDrawer extends ConsumerWidget {
     Routemaster.of(context).push('/r/${community.name}');
   }
 
+  void logOut(WidgetRef ref) {
+    ref.read(authControllerProvider.notifier).logout();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(userProvider)!;
+    final isGuest = !user.isAuthenticated;
+
     return Drawer(
       child: SafeArea(
         child: Column(
           children: [
-            ListTile(
-              title: Text('새로운 모임 만들기'),
-              leading: Icon(Icons.post_add),
-              onTap: () => navigateToCreateCommunity(context),
+            ElevatedButton(
+              onPressed: () => logOut(ref),
+              child: Text('로그아웃'),
             ),
-            ref.watch(userCommunitiesProvider).when(
-                  data: (data) => Expanded(
-                    child: ListView.builder(
-                      itemCount: data.length,
-                      itemBuilder: ((context, index) {
-                        final community = data[index];
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage: NetworkImage(community.avatar),
-                          ),
-                          title: Text('${community.name}의 모임'),
-                          trailing: Text('멤버 ${community.members.length}명'),
-                          onTap: () => navigateToCommunity(context, community),
-                        );
-                      }),
-                    ),
+            isGuest
+                ? const SignInButton()
+                : ListTile(
+                    title: const Text('Create a community'),
+                    leading: const Icon(Icons.add),
+                    onTap: () => navigateToCreateCommunity(context),
                   ),
-                  error: (error, stackTrace) =>
-                      ErrorText(error: error.toString()),
-                  loading: () => Loader(),
-                ),
+            if (!isGuest)
+              ref.watch(userCommunitiesProvider).when(
+                    data: (communities) => Expanded(
+                      child: ListView.builder(
+                        itemCount: communities.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          final community = communities[index];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: NetworkImage(community.avatar),
+                            ),
+                            title: Text('r/${community.name}'),
+                            onTap: () {
+                              navigateToCommunity(context, community);
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    error: (error, stackTrace) => ErrorText(
+                      error: error.toString(),
+                    ),
+                    loading: () => const Loader(),
+                  ),
           ],
         ),
       ),

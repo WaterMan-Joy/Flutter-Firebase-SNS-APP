@@ -14,49 +14,45 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 final userCommunitiesProvider = StreamProvider((ref) {
-  final communityProvider = ref.watch(communityControllerProvider.notifier);
-  return communityProvider.getUserCommunities();
+  final communityController = ref.watch(communityControllerProvider.notifier);
+  return communityController.getUserCommunities();
 });
 
-// StreamProviderFamily 는 다른 파라미터를 받을 때 사용한다
-final getCommunityByNameProvider = StreamProvider.family((ref, String name) {
-  return ref
-      .watch(communityControllerProvider.notifier)
-      .getCommunityByName(name);
-  // final communityProvider = ref.watch(communityControllerProvider.notifier);
-  // return communityProvider.getCommunityByName(name);
-});
-
-// screen view 에서 isLoading 으로 왓치 한다
 final communityControllerProvider =
     StateNotifierProvider<CommunityController, bool>((ref) {
   final communityRepository = ref.watch(communityRepositoryProvider);
   final storageRepository = ref.watch(storageRepositoryProvider);
-
   return CommunityController(
-      communityRepository: communityRepository,
-      storageRepository: storageRepository,
-      ref: ref);
+    communityRepository: communityRepository,
+    storageRepository: storageRepository,
+    ref: ref,
+  );
 });
 
-// StateNotifier<bool> 인 이유는 로딩바를 적용하려고
+final getCommunityByNameProvider = StreamProvider.family((ref, String name) {
+  return ref
+      .watch(communityControllerProvider.notifier)
+      .getCommunityByName(name);
+});
+
+final searchCommunityProvider = StreamProvider.family((ref, String query) {
+  return ref.watch(communityControllerProvider.notifier).searchCommunity(query);
+});
+
 class CommunityController extends StateNotifier<bool> {
   final CommunityRepository _communityRepository;
-  final StorageRepository _storageRepository;
   final Ref _ref;
+  final StorageRepository _storageRepository;
   CommunityController({
-    required communityRepository,
-    required storageRepository,
-    required ref,
+    required CommunityRepository communityRepository,
+    required Ref ref,
+    required StorageRepository storageRepository,
   })  : _communityRepository = communityRepository,
-        _storageRepository = storageRepository,
         _ref = ref,
+        _storageRepository = storageRepository,
         super(false);
 
-  // TODO: Create Community
-  // BuildContext 를 받는 이유는 오류 발생 시 스낵바를 사용하기 때문
   void createCommunity(String name, BuildContext context) async {
-    // 로딩바 실행
     state = true;
     final uid = _ref.read(userProvider)?.uid ?? '';
     Community community = Community(
@@ -67,20 +63,24 @@ class CommunityController extends StateNotifier<bool> {
       members: [uid],
       mods: [uid],
     );
+
     final res = await _communityRepository.createCommunity(community);
-    // loading bar finish
     state = false;
-    res.fold((l) {
-      // 실패
-      showSnackBar(context, l.message);
-    }, (r) {
-      // 성공
-      showSnackBar(context, '성공');
+    res.fold((l) => showSnackBar(context, l.message), (r) {
+      showSnackBar(context, 'Community created successfully!');
       Routemaster.of(context).pop();
     });
   }
 
-  // TODO: Edit Community
+  Stream<List<Community>> getUserCommunities() {
+    final uid = _ref.read(userProvider)!.uid;
+    return _communityRepository.getUserCommunities(uid);
+  }
+
+  Stream<Community> getCommunityByName(String name) {
+    return _communityRepository.getCommunityByName(name);
+  }
+
   void editCommunity({
     required File? profileFile,
     required File? bannerFile,
@@ -126,12 +126,7 @@ class CommunityController extends StateNotifier<bool> {
     );
   }
 
-  Stream<List<Community>> getUserCommunities() {
-    final uid = _ref.read(userProvider)?.uid ?? '';
-    return _communityRepository.getUserCommunities(uid);
-  }
-
-  Stream<Community> getCommunityByName(String name) {
-    return _communityRepository.getCommunityByName(name);
+  Stream<List<Community>> searchCommunity(String query) {
+    return _communityRepository.searchCommunity(query);
   }
 }
